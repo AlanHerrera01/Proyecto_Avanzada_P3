@@ -1,76 +1,57 @@
 package com.grupobb.biblioteca.controller;
 
 import com.grupobb.biblioteca.domain.User;
-import com.grupobb.biblioteca.repository.UserRepository;
+import com.grupobb.biblioteca.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Controlador REST para gestionar usuarios.
- *
- * Endpoints:
- * - GET /api/users       -> lista todos los usuarios
- * - GET /api/users/{id}  -> obtiene un usuario por id
- * - POST /api/users      -> crea un usuario
- * - PUT /api/users/{id}  -> actualiza un usuario
- * - DELETE /api/users/{id} -> elimina un usuario
- */
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    /**
-     * Devuelve todos los usuarios en la BD.
-     */
     @GetMapping
     public List<User> list() {
-        return userRepository.findAll();
+        return userService.getAllUsers(); // Si no existe, crea este método en UserService
     }
 
-    /**
-     * Obtiene un usuario por su id.
-     */
     @GetMapping("/{id}")
     public ResponseEntity<User> get(@PathVariable Long id) {
-        return userRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        return userService.getUserById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Crea un nuevo usuario a partir del JSON enviado.
-     */
     @PostMapping
-    public User create(@RequestBody User user) {
-        return userRepository.save(user);
+    public ResponseEntity<User> create(@RequestBody User user) {
+        User createdUser = userService.createUser(user);
+        return ResponseEntity.status(201).body(createdUser);
     }
 
-    /**
-     * Actualiza un usuario existente.
-     */
     @PutMapping("/{id}")
-    public ResponseEntity<User> update(@PathVariable Long id, @RequestBody User in) {
-        return userRepository.findById(id).map(u -> {
-            u.setNombre(in.getNombre());
-            u.setEmail(in.getEmail());
-            return ResponseEntity.ok(userRepository.save(u));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<User> update(@PathVariable Long id, @RequestBody User userDetails) {
+        try {
+            User updatedUser = userService.updateUser(id, userDetails);
+            return ResponseEntity.ok(updatedUser);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    /**
-     * Elimina un usuario por id.
-     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        return userRepository.findById(id).map(u -> {
-            userRepository.delete(u);
-            return ResponseEntity.noContent().<Void>build();
-        }).orElse(ResponseEntity.notFound().build());
+        try {
+            userService.deleteUser(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
