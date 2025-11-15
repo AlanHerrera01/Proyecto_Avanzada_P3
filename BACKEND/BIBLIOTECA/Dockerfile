@@ -1,7 +1,7 @@
 # Etapa 1: Build
 FROM gradle:8.4-jdk17 as build
 WORKDIR /app
-COPY . .
+COPY ../.. .
 WORKDIR /app/BACKEND/BIBLIOTECA
 RUN chmod +x ./gradlew
 RUN ./gradlew clean bootJar --no-daemon
