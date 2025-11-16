@@ -2,6 +2,7 @@ package com.grupobb.biblioteca.controller;
 
 import com.grupobb.biblioteca.domain.Book;
 import com.grupobb.biblioteca.repository.BookRepository;
+import com.grupobb.biblioteca.service.BookService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,58 +22,36 @@ import java.util.List;
 @RequestMapping("/api/books")
 public class BookController {
 
-    private final BookRepository bookRepository;
+    private final BookService bookService;
 
-    public BookController(BookRepository bookRepository) {
-        this.bookRepository = bookRepository;
+    public BookController(BookService bookService) {
+        this.bookService = bookService;
     }
 
-    /**
-     * Devuelve la lista completa de libros.
-     */
     @GetMapping
     public List<Book> list() {
-        return bookRepository.findAll();
+        return bookService.findAll();
     }
 
-    /**
-     * Obtiene un libro por su id.
-     */
     @GetMapping("/{id}")
     public ResponseEntity<Book> get(@PathVariable Long id) {
-        return bookRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(bookService.findById(id));
     }
 
-    /**
-     * Crea un nuevo libro a partir del payload JSON.
-     * Nota: para enlazar un autor existente, envía el objeto author con su id: { "autor": { "id": 1 } }
-     */
     @PostMapping
     public Book create(@RequestBody Book book) {
-        return bookRepository.save(book);
+        return bookService.create(book);
     }
 
-    /**
-     * Actualiza campos básicos de un libro (titulo, autor, disponible).
-     */
     @PutMapping("/{id}")
-    public ResponseEntity<Book> update(@PathVariable Long id, @RequestBody Book in) {
-        return bookRepository.findById(id).map(b -> {
-            b.setTitulo(in.getTitulo());
-            b.setAutor(in.getAutor());
-            b.setDisponible(in.isDisponible());
-            return ResponseEntity.ok(bookRepository.save(b));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Book> update(@PathVariable Long id, @RequestBody Book book) {
+        return ResponseEntity.ok(bookService.update(id, book));
     }
 
-    /**
-     * Elimina un libro por id.
-     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        return bookRepository.findById(id).map(b -> {
-            bookRepository.delete(b);
-            return ResponseEntity.noContent().<Void>build();
-        }).orElse(ResponseEntity.notFound().build());
+        bookService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
+

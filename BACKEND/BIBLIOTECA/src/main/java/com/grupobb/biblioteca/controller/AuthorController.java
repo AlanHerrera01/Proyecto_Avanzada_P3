@@ -2,6 +2,7 @@ package com.grupobb.biblioteca.controller;
 
 import com.grupobb.biblioteca.domain.Author;
 import com.grupobb.biblioteca.repository.AuthorRepository;
+import com.grupobb.biblioteca.service.AuthorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,56 +22,36 @@ import java.util.List;
 @RequestMapping("/api/authors")
 public class AuthorController {
 
-    private final AuthorRepository authorRepository;
+    private final AuthorService authorService;
 
-    public AuthorController(AuthorRepository authorRepository) {
-        this.authorRepository = authorRepository;
+    public AuthorController(AuthorService authorService) {
+        this.authorService = authorService;
     }
 
-    /**
-     * Devuelve la lista completa de autores.
-     */
     @GetMapping
     public List<Author> list() {
-        return authorRepository.findAll();
+        return authorService.findAll();
     }
 
-    /**
-     * Obtiene un autor por su id.
-     */
     @GetMapping("/{id}")
     public ResponseEntity<Author> get(@PathVariable Long id) {
-        return authorRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(authorService.findById(id));
     }
 
-    /**
-     * Crea un nuevo autor a partir del payload JSON.
-     */
     @PostMapping
     public Author create(@RequestBody Author author) {
-        return authorRepository.save(author);
+        return authorService.create(author);
     }
 
-    /**
-     * Actualiza campos básicos de un autor existente.
-     */
     @PutMapping("/{id}")
-    public ResponseEntity<Author> update(@PathVariable Long id, @RequestBody Author in) {
-        return authorRepository.findById(id).map(a -> {
-            a.setNombre(in.getNombre());
-            a.setNacionalidad(in.getNacionalidad());
-            return ResponseEntity.ok(authorRepository.save(a));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Author> update(@PathVariable Long id, @RequestBody Author author) {
+        return ResponseEntity.ok(authorService.update(id, author));
     }
 
-    /**
-     * Elimina un autor por id.
-     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        return authorRepository.findById(id).map(a -> {
-            authorRepository.delete(a);
-            return ResponseEntity.noContent().<Void>build();
-        }).orElse(ResponseEntity.notFound().build());
+        authorService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
+
