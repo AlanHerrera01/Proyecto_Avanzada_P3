@@ -1,4 +1,4 @@
-package com.grupobb.biblioteca.controller;
+package com.grupobb.biblioteca.web.controller;
 
 import com.grupobb.biblioteca.domain.User;
 import com.grupobb.biblioteca.service.UserService;
