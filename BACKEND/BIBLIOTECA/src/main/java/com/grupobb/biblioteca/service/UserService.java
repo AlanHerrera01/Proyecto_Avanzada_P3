@@ -1,14 +1,19 @@
 package com.grupobb.biblioteca.service;
 
-import com.grupobb.biblioteca.domain.User;
+import com.grupobb.biblioteca.dto.User.UserRequestData;
+import com.grupobb.biblioteca.dto.User.UserResponseData;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface UserService {
-    User createUser(User user);
-    List<User> getAllUsers();
-    Optional<User> getUserById(Long id);
-    User updateUser(Long id, User userDetails);
-    void deleteUser(Long id);
+
+    UserResponseData create(UserRequestData request);
+
+    UserResponseData getById(Long id);
+
+    List<UserResponseData> list();
+
+    UserResponseData update(Long id, UserRequestData request);
+
+    void delete(Long id);
 }

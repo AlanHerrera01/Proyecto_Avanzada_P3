@@ -1,23 +1,15 @@
 package com.grupobb.biblioteca.web.controller;
 
-import com.grupobb.biblioteca.domain.User;
+import com.grupobb.biblioteca.dto.User.UserRequestData;
+import com.grupobb.biblioteca.dto.User.UserResponseData;
 import com.grupobb.biblioteca.service.UserService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
-/**
- * Controlador REST para gestionar usuarios.
- *
- * Endpoints:
- * - GET /api/users       -> lista todos los usuarios
- * - GET /api/users/{id}  -> obtiene un usuario por id
- * - POST /api/users      -> crea un usuario
- * - PUT /api/users/{id}  -> actualiza un usuario
- * - DELETE /api/users/{id} -> elimina un usuario
- */
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -28,41 +20,41 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping
-    public List<User> list() {
-        return userService.getAllUsers();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<User> get(@PathVariable Long id) {
-        return userService.getUserById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
+    // Crear usuario
     @PostMapping
-    public ResponseEntity<User> create(@RequestBody User user) {
-        User createdUser = userService.createUser(user);
-        return ResponseEntity.status(201).body(createdUser);
+    public ResponseEntity<UserResponseData> create(
+            @Valid @RequestBody UserRequestData request) {
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(userService.create(request));
     }
 
+    // Obtener usuario por ID
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseData> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getById(id));
+    }
+
+    // Listar usuarios
+    @GetMapping
+    public ResponseEntity<List<UserResponseData>> list() {
+        return ResponseEntity.ok(userService.list());
+    }
+
+    // Actualizar usuario
     @PutMapping("/{id}")
-    public ResponseEntity<User> update(@PathVariable Long id, @RequestBody User userDetails) {
-        try {
-            User updatedUser = userService.updateUser(id, userDetails);
-            return ResponseEntity.ok(updatedUser);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<UserResponseData> update(
+            @PathVariable Long id,
+            @Valid @RequestBody UserRequestData request) {
+
+        return ResponseEntity.ok(userService.update(id, request));
     }
 
+    // Eliminar usuario
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        try {
-            userService.deleteUser(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        userService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

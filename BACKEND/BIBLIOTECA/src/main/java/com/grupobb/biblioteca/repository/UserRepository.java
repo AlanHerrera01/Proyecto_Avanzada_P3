@@ -7,7 +7,11 @@ import java.util.Optional;
 
 /**
  * Repositorio para la entidad User.
+ * Incluye métodos para buscar por email y validar existencia.
  */
 public interface UserRepository extends JpaRepository<User, Long> {
+
     Optional<User> findByEmail(String email);
+
+    boolean existsByEmail(String email);
 }

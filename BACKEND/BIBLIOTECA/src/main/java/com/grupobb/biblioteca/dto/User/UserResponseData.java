@@ -1,28 +1,41 @@
 package com.grupobb.biblioteca.dto.User;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-
 public class UserResponseData {
 
-    @NotBlank @Size(min = 3, max = 120)
-    private String Nombre;
+    private Long id;
+    private String nombre;
+    private String email;
+    private boolean active;
 
-    @NotBlank @Email @Size(max = 120)
-    private String Email;
-
-    public @NotBlank @Size(min = 3, max = 120) String getNombre() {
-        return Nombre;
-    }
-    public void  setNombre(@NotBlank @Size(min = 3, max = 120)  String nombre) {
-        Nombre = nombre;
-    }
-    public @NotBlank @Email @Size(max = 120) String getEmail() {
-        return Email;
-    }
-    public void setEmail(@NotBlank @Email @Size(max = 120) String email) {
-        Email = email;
+    public Long getId() {
+        return id;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }

@@ -1,54 +1,92 @@
 package com.grupobb.biblioteca.service.impl;
 
 import com.grupobb.biblioteca.domain.User;
+import com.grupobb.biblioteca.dto.User.UserRequestData;
+import com.grupobb.biblioteca.dto.User.UserResponseData;
 import com.grupobb.biblioteca.repository.UserRepository;
 import com.grupobb.biblioteca.service.UserService;
 import com.grupobb.biblioteca.web.advice.ConflictException;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.grupobb.biblioteca.web.advice.NotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository repo;
 
-    // En UserServiceImpl.java
-    @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public UserServiceImpl(UserRepository repo) {
+        this.repo = repo;
     }
 
-
     @Override
-    public User createUser(User user) {
-        Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
-        if (existingUser.isPresent()) {
-            throw new ConflictException("El correo ya existe.");
+    public UserResponseData create(UserRequestData request) {
+
+        // Validar email único
+        if (repo.existsByEmail(request.getEmail())) {
+            throw new ConflictException("El email ya está registrado");
         }
-        return userRepository.save(user);
+
+        User user = new User();
+        user.setNombre(request.getNombre());
+        user.setEmail(request.getEmail());
+
+        User saved = repo.save(user);
+
+        return toResponse(saved);
     }
 
     @Override
-    public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
+    public UserResponseData getById(Long id) {
+        User user = repo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+
+        return toResponse(user);
     }
 
     @Override
-    public User updateUser(Long id, User userDetails) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        user.setNombre(userDetails.getNombre());
-        user.setEmail(userDetails.getEmail());
-        // Actualiza otros campos según sea necesario
-        return userRepository.save(user);
+    public List<UserResponseData> list() {
+        return repo.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override
-    public void deleteUser(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        userRepository.delete(user);
+    public UserResponseData update(Long id, UserRequestData request) {
+
+        User user = repo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+
+        // Validar email único si cambia
+        if (!user.getEmail().equals(request.getEmail())
+                && repo.existsByEmail(request.getEmail())) {
+            throw new ConflictException("El email ya está en uso");
+        }
+
+        user.setNombre(request.getNombre());
+        user.setEmail(request.getEmail());
+
+        User updated = repo.save(user);
+
+        return toResponse(updated);
+    }
+
+    @Override
+    public void delete(Long id) {
+
+        User user = repo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+
+        repo.delete(user);
+    }
+
+    private UserResponseData toResponse(User user) {
+        UserResponseData dto = new UserResponseData();
+        dto.setId(user.getId());
+        dto.setNombre(user.getNombre());
+        dto.setEmail(user.getEmail());
+        return dto;
     }
 }
