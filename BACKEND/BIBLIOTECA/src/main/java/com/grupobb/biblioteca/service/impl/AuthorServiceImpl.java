@@ -4,8 +4,12 @@ import com.grupobb.biblioteca.domain.Author;
 import com.grupobb.biblioteca.dto.Author.AuthorRequestData;
 import com.grupobb.biblioteca.dto.Author.AuthorResponse;
 import com.grupobb.biblioteca.repository.AuthorRepository;
+import com.grupobb.biblioteca.repository.BookRepository;
 import com.grupobb.biblioteca.service.AuthorService;
+import com.grupobb.biblioteca.web.advice.BadRequestException;
+import com.grupobb.biblioteca.web.advice.NotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -13,9 +17,11 @@ import java.util.List;
 public class AuthorServiceImpl implements AuthorService {
 
     private final AuthorRepository repository;
+    private final BookRepository bookRepository;
 
-    public AuthorServiceImpl(AuthorRepository repository) {
+    public AuthorServiceImpl(AuthorRepository repository, BookRepository bookRepository) {
         this.repository = repository;
+        this.bookRepository = bookRepository;
     }
 
     @Override
@@ -29,11 +35,12 @@ public class AuthorServiceImpl implements AuthorService {
     @Override
     public AuthorResponse findById(Long id) {
         Author author = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Autor no encontrado con id " + id));
+                .orElseThrow(() -> new NotFoundException("Autor no encontrado con id " + id));
         return toResponse(author);
     }
 
     @Override
+    @Transactional
     public AuthorResponse create(AuthorRequestData request) {
         Author author = new Author();
         author.setNombre(request.getNombre());
@@ -43,9 +50,10 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
+    @Transactional
     public AuthorResponse update(Long id, AuthorRequestData request) {
         Author author = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Autor no encontrado con id " + id));
+                .orElseThrow(() -> new NotFoundException("Autor no encontrado con id " + id));
 
         author.setNombre(request.getNombre());
         author.setNacionalidad(request.getNacionalidad());
@@ -55,10 +63,16 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
-        if (!repository.existsById(id)) {
-            throw new RuntimeException("Autor no encontrado con id " + id);
+        Author author = repository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Autor no encontrado con id " + id));
+        
+        // Validar que no tenga libros asociados
+        if (bookRepository.existsByAutor(author)) {
+            throw new BadRequestException("No se puede eliminar el autor porque tiene libros asociados");
         }
+        
         repository.deleteById(id);
     }
 

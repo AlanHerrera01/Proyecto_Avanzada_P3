@@ -14,12 +14,35 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    //404 cuando no se encuentra un recurso
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<?> handleNotFound(NotFoundException ex){
+        return error(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
     //409 cuando existe correos duplicados
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<?> handleConflict(ConflictException ex){
         return error(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+    //400 cuando el libro no está disponible
+    @ExceptionHandler(BookNotAvailableException.class)
+    public ResponseEntity<?> handleBookNotAvailable(BookNotAvailableException ex){
+        return error(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    //400 cuando el libro ya fue devuelto
+    @ExceptionHandler(AlreadyReturnedException.class)
+    public ResponseEntity<?> handleAlreadyReturned(AlreadyReturnedException ex){
+        return error(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    //400 para errores de validación de negocio
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<?> handleBadRequest(BadRequestException ex){
+        return error(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
 
     //400 por validaciones
     @ExceptionHandler(MethodArgumentNotValidException.class)

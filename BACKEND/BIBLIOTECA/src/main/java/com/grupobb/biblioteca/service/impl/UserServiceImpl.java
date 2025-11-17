@@ -3,11 +3,14 @@ package com.grupobb.biblioteca.service.impl;
 import com.grupobb.biblioteca.domain.User;
 import com.grupobb.biblioteca.dto.User.UserRequestData;
 import com.grupobb.biblioteca.dto.User.UserResponseData;
+import com.grupobb.biblioteca.repository.LoanRepository;
 import com.grupobb.biblioteca.repository.UserRepository;
 import com.grupobb.biblioteca.service.UserService;
+import com.grupobb.biblioteca.web.advice.BadRequestException;
 import com.grupobb.biblioteca.web.advice.ConflictException;
 import com.grupobb.biblioteca.web.advice.NotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,12 +18,15 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository repo;
+    private final LoanRepository loanRepository;
 
-    public UserServiceImpl(UserRepository repo) {
+    public UserServiceImpl(UserRepository repo, LoanRepository loanRepository) {
         this.repo = repo;
+        this.loanRepository = loanRepository;
     }
 
     @Override
+    @Transactional
     public UserResponseData create(UserRequestData request) {
 
         // Validar email único
@@ -54,6 +60,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponseData update(Long id, UserRequestData request) {
 
         User user = repo.findById(id)
@@ -74,10 +81,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
 
         User user = repo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+
+        // Validar que no tenga préstamos activos
+        if (loanRepository.existsByUsuarioAndFechaDevolucionIsNull(user)) {
+            throw new BadRequestException("No se puede eliminar el usuario porque tiene préstamos activos");
+        }
 
         repo.delete(user);
     }

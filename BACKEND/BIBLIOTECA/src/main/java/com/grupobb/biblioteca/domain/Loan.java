@@ -1,6 +1,7 @@
 package com.grupobb.biblioteca.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 /**
@@ -17,16 +18,19 @@ public class Loan {
     private Long id;
 
     // Usuario que realizó el préstamo (FK usuario_id).
+    @NotNull(message = "El usuario es obligatorio")
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private User usuario;
 
     // Libro prestado (FK libro_id).
+    @NotNull(message = "El libro es obligatorio")
     @ManyToOne
     @JoinColumn(name = "libro_id")
     private Book libro;
 
     // Fecha en que se realizó el préstamo.
+    @NotNull(message = "La fecha de préstamo es obligatoria")
     private LocalDate fechaPrestamo;
 
     // Fecha en que se devolvió el libro (null si aún no fue devuelto).

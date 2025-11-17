@@ -1,5 +1,6 @@
 package com.grupobb.biblioteca.repository;
 
+import com.grupobb.biblioteca.domain.Author;
 import com.grupobb.biblioteca.domain.Book;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -8,4 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * Provee métodos CRUD y puede ser extendido con consultas personalizadas si se necesita.
  */
 public interface BookRepository extends JpaRepository<Book, Long> {
+    boolean existsByAutor(Author autor);
 }

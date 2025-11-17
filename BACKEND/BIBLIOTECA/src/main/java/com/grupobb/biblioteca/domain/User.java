@@ -20,10 +20,11 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
+    @NotBlank(message = "El nombre no puede estar vacío")
     private String nombre;
 
-    @Email
+    @NotBlank(message = "El email no puede estar vacío")
+    @Email(message = "Debe ser un email válido")
     @Column(unique = true)
     private String email;
 

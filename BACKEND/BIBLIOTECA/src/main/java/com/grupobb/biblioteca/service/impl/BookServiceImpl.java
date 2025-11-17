@@ -6,8 +6,12 @@ import com.grupobb.biblioteca.dto.Book.BookRequestData;
 import com.grupobb.biblioteca.dto.Book.BookResponse;
 import com.grupobb.biblioteca.repository.AuthorRepository;
 import com.grupobb.biblioteca.repository.BookRepository;
+import com.grupobb.biblioteca.repository.LoanRepository;
 import com.grupobb.biblioteca.service.BookService;
+import com.grupobb.biblioteca.web.advice.BadRequestException;
+import com.grupobb.biblioteca.web.advice.NotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,11 +20,14 @@ public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
     private final AuthorRepository authorRepository;
+    private final LoanRepository loanRepository;
 
     public BookServiceImpl(BookRepository bookRepository,
-                           AuthorRepository authorRepository) {
+                           AuthorRepository authorRepository,
+                           LoanRepository loanRepository) {
         this.bookRepository = bookRepository;
         this.authorRepository = authorRepository;
+        this.loanRepository = loanRepository;
     }
 
     @Override
@@ -34,14 +41,15 @@ public class BookServiceImpl implements BookService {
     @Override
     public BookResponse findById(Long id) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Libro no encontrado con id " + id));
+                .orElseThrow(() -> new NotFoundException("Libro no encontrado con id " + id));
         return toResponse(book);
     }
 
     @Override
+    @Transactional
     public BookResponse create(BookRequestData request) {
         Author autor = authorRepository.findById(request.getAutorId())
-                .orElseThrow(() -> new RuntimeException("Autor no encontrado con id " + request.getAutorId()));
+                .orElseThrow(() -> new NotFoundException("Autor no encontrado con id " + request.getAutorId()));
 
         Book book = new Book();
         book.setTitulo(request.getTitulo());
@@ -54,15 +62,16 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional
     public BookResponse update(Long id, BookRequestData request) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Libro no encontrado con id " + id));
+                .orElseThrow(() -> new NotFoundException("Libro no encontrado con id " + id));
 
         book.setTitulo(request.getTitulo());
 
         if (request.getAutorId() != null) {
             Author autor = authorRepository.findById(request.getAutorId())
-                    .orElseThrow(() -> new RuntimeException("Autor no encontrado con id " + request.getAutorId()));
+                    .orElseThrow(() -> new NotFoundException("Autor no encontrado con id " + request.getAutorId()));
             book.setAutor(autor);
         }
 
@@ -75,10 +84,16 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
-        if (!bookRepository.existsById(id)) {
-            throw new RuntimeException("Libro no encontrado con id " + id);
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Libro no encontrado con id " + id));
+        
+        // Validar que no tenga préstamos activos
+        if (loanRepository.existsByLibroAndFechaDevolucionIsNull(book)) {
+            throw new BadRequestException("No se puede eliminar el libro porque tiene préstamos activos");
         }
+        
         bookRepository.deleteById(id);
     }
 

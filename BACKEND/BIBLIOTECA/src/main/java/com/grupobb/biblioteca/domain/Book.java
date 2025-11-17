@@ -20,10 +20,11 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
+    @NotBlank(message = "El título no puede estar vacío")
     private String titulo;
 
     // Relación con Author; por simplicidad no usamos cascade aquí.
+    @NotNull(message = "El autor es obligatorio")
     @ManyToOne
     @JoinColumn(name = "autor_id")
     private Author autor;

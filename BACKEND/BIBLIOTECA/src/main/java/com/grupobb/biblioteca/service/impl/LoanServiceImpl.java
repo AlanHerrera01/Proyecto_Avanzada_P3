@@ -9,6 +9,8 @@ import com.grupobb.biblioteca.repository.BookRepository;
 import com.grupobb.biblioteca.repository.LoanRepository;
 import com.grupobb.biblioteca.repository.UserRepository;
 import com.grupobb.biblioteca.service.LoanService;
+import com.grupobb.biblioteca.web.advice.AlreadyReturnedException;
+import com.grupobb.biblioteca.web.advice.BookNotAvailableException;
 import com.grupobb.biblioteca.web.advice.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +44,7 @@ public class LoanServiceImpl implements LoanService {
                 .orElseThrow(() -> new NotFoundException("Libro no encontrado"));
 
         if (!book.isDisponible()) {
-            throw new RuntimeException("El libro no está disponible");
+            throw new BookNotAvailableException("El libro no está disponible");
         }
 
         Loan loan = new Loan();
@@ -67,7 +69,7 @@ public class LoanServiceImpl implements LoanService {
                 .orElseThrow(() -> new NotFoundException("Préstamo no encontrado"));
 
         if (loan.getFechaDevolucion() != null) {
-            throw new RuntimeException("El libro ya fue devuelto");
+            throw new AlreadyReturnedException("El libro ya fue devuelto");
         }
 
         loan.setFechaDevolucion(LocalDate.now());

@@ -20,7 +20,7 @@ public class Author {
     private Long id;
 
     // Nombre del autor. Validación básica con @NotBlank.
-    @NotBlank
+    @NotBlank(message = "El nombre del autor no puede estar vacío")
     private String nombre;
 
     // Nacionalidad (cadena libre).
