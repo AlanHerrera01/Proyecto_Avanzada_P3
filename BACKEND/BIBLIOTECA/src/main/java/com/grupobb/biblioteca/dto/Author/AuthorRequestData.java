@@ -13,7 +13,7 @@ public class AuthorRequestData {
     public String getNombre() {
         return nombre;
     }
-
+    //siempre
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }

@@ -74,7 +74,7 @@ jobs:
             deploy_status=$(curl -s --request GET \
               --url "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys/$deploy_id" \
               --header "Accept: application/json" \
-              --header "Authorization: Bearer ${RENDER_API_KEY }}" | jq -r '.status')
+              --header "Authorization: Bearer ${RENDER_API_KEY}" | jq -r '.status')
 
             echo "Estado actual del despliegue: $deploy_status"
 
