@@ -22,6 +22,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Debug workflow files
+        run: |
+          echo "Verificando archivos de workflow en el runner..."
+          ls -la .github/workflows
+
       - name: Debug event
         run: |
           echo "Event name: ${{ github.event_name }}"
@@ -62,7 +67,8 @@ jobs:
           set -euo pipefail
           echo "Iniciando despliegue en Render..."
 
-          http_status=$(curl -s -o response.json -w "%{http_code}" -X POST \
+          # Guardamos headers y body para diagnóstico
+          http_status=$(curl -s -D headers.txt -o response.json -w "%{http_code}" -X POST \
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${RENDER_API_KEY}" \
@@ -70,20 +76,97 @@ jobs:
             -d '{"clearCache":"do_not_clear"}') || true
 
           echo "Respuesta HTTP: $http_status"
+          echo "--- Response body ---"
           cat response.json || true
+          echo "--- Response headers ---"
+          sed -n '1,200p' headers.txt || true
 
           if [ "$http_status" -ne 201 ] && [ "$http_status" -ne 202 ]; then
             echo "Error: la API de Render no inició el despliegue correctamente (HTTP $http_status)." >&2
             exit 1
           fi
 
-          deploy_id=$(jq -r '.id // empty' response.json || true)
+          # Intentos de extracción del id desde varios paths posibles en el JSON
+          deploy_id=$(jq -r 'if .id then .id elif .deploy and .deploy.id then .deploy.id elif .data and .data.id then .data.id else empty end' response.json || true)
+
+          # Si no está en el body, intentar extraer del header Location
           if [ -z "$deploy_id" ]; then
-            echo "Error: no se pudo extraer el id del despliegue." >&2
-            exit 1
+            loc_header=$(grep -i '^Location:' headers.txt || true)
+            if [ -n "$loc_header" ]; then
+              # Extraer último segmento de la URL en Location
+              url=$(echo "$loc_header" | awk '{print $2}' | tr -d '\r') || true
+              deploy_id=$(echo "$url" | sed -E 's:.*/([^/]+)$:\1:') || true
+            fi
           fi
 
-          echo "Despliegue iniciado con id: $deploy_id"
+          # Fallback adicional: buscar cualquier campo "id" recursivamente en el JSON
+          if [ -z "$deploy_id" ]; then
+            echo "Intentando extracción recursiva de cualquier campo 'id' en response.json..."
+            deploy_id=$(jq -r '.. | objects | .id? // empty' response.json | head -n1 || true)
+          fi
+
+          # Último recurso: buscar patrones tipo UUID o números en el body
+          if [ -z "$deploy_id" ]; then
+            echo "Intentando extraer patrón UUID/numérico del body..."
+            deploy_id=$(grep -Eo '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}' response.json | head -n1 || true)
+            if [ -z "$deploy_id" ]; then
+              deploy_id=$(grep -Eo '[0-9]+' response.json | head -n1 || true)
+            fi
+          fi
+
+          # Registro final para debugging
+          if [ -n "$deploy_id" ]; then
+            echo "Despliegue iniciado con id: $deploy_id"
+          else
+            echo "No se encontró id en la respuesta directa; intentaremos obtenerlo consultando la lista de deploys del servicio..."
+
+            # Intentar obtener lista de despliegues del servicio y extraer el más reciente
+            # curl -s -H "Accept: application/json" -H "Authorization: Bearer ${RENDER_API_KEY}" "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys?limit=10" -o deploys_list.json || true
+            # echo "--- deploys_list.json ---"
+            # cat deploys_list.json || true
+            #
+            # deploy_id=$(jq -r 'if type=="array" then .[0].id elif .deploys then .deploys[0].id elif .data then .data[0].id elif .id then .id elif .deploy and .deploy.id then .deploy.id else empty end' deploys_list.json || true)
+            #
+            # # Fallback recursivo si sigue vacío
+            # if [ -z "$deploy_id" ]; then
+            #   echo "Intentando extracción recursiva de cualquier 'id' en deploys_list.json..."
+            #   deploy_id=$(jq -r '.. | objects | .id? // empty' deploys_list.json | head -n1 || true)
+            # fi
+
+            # Intentar listar deploys varias veces (reintentos) para capturar el deploy que se acaba de crear
+            deploy_id=""
+            for attempt in $(seq 1 10); do
+              echo "Reintento $attempt: consultando lista de deploys..."
+              curl -s -H "Accept: application/json" -H "Authorization: Bearer ${RENDER_API_KEY}" "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys?limit=10" -o deploys_list.json || true
+              echo "--- deploys_list.json (intent $attempt) ---"
+              cat deploys_list.json || true
+              deploy_id=$(jq -r 'if type=="array" and .[0].id then .[0].id elif .deploys and .deploys[0].id then .deploys[0].id elif .data and .data[0].id then .data[0].id elif .id then .id elif .deploy and .deploy.id then .deploy.id else empty end' deploys_list.json | head -n1 || true)
+              if [ -n "$deploy_id" ]; then
+                echo "Encontrado deploy_id en lista: $deploy_id"
+                break
+              fi
+              sleep 3
+            done
+
+            # Fallback recursivo si sigue vacío
+            if [ -z "$deploy_id" ]; then
+              echo "Intentando extracción recursiva de cualquier 'id' en deploys_list.json..."
+              deploy_id=$(jq -r '.. | objects | .id? // empty' deploys_list.json | head -n1 || true)
+            fi
+
+            if [ -n "$deploy_id" ]; then
+              echo "Deploy id encontrado en lista: $deploy_id"
+            else
+              echo "Error: no se pudo extraer el id del despliegue." >&2
+              echo "Contenido de response.json:" >&2
+              cat response.json >&2 || true
+              echo "Contenido de headers.txt:" >&2
+              sed -n '1,200p' headers.txt >&2 || true
+              echo "Contenido de deploys_list.json:" >&2
+              cat deploys_list.json >&2 || true
+              exit 1
+            fi
+          fi
 
           # Polling del estado del despliegue
           for i in $(seq 1 30); do
