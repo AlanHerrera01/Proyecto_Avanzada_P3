@@ -61,9 +61,11 @@ npm run build
 
 ## 🌐 Configuración de la API
 
-El frontend se conecta al backend en: `http://localhost:8080/api`
+### Producción (Render)
+El frontend se conecta al backend desplegado en: **https://proyecto-avanzada-p1.onrender.com/api**
 
-Para cambiar la URL, edita `src/services/api.ts`
+### Desarrollo Local
+Para desarrollo local, cambia la URL en `src/services/api.ts` a: `http://localhost:8080/api`
 
 ## 📋 Funcionalidades Implementadas
 

@@ -17,6 +17,12 @@ Proyecto_Avanzada_P1/
 
 ## 🚀 Inicio Rápido
 
+### ✨ Acceso a la Aplicación en Producción
+
+**Backend desplegado en Render:** https://proyecto-avanzada-p1.onrender.com/api
+
+### Para desarrollo local:
+
 ### Prerrequisitos
 
 - ☕ **Java 17+**

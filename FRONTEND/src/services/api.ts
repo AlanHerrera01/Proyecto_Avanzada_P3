@@ -1,8 +1,9 @@
 import axios from 'axios';
 
 // Configuración base de axios
+// Usa variable de entorno o fallback a Render
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://proyecto-avanzada-p1.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
   },

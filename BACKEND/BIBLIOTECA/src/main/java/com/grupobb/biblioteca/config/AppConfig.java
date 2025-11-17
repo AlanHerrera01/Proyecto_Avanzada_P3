@@ -14,7 +14,12 @@ public class AppConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:5173") // Frontend Vite
+                        .allowedOrigins(
+                            "http://localhost:5173",  // Frontend local
+                            "http://localhost:3000",   // Alternativo local
+                            "https://proyecto-avanzada-p1.onrender.com", // Backend Render
+                            "*" // Permitir cualquier origen (para desarrollo)
+                        )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
