@@ -1,12 +1,12 @@
 spring:
-  #Configuracion del datasource
+  # Configuración del datasource
   datasource:
     url: jdbc:h2:mem:renderdb;DB_CLOSE_DELAY=-1;MODE=MySQL
     driver-class-name: org.h2.Driver
     username: sa
-    password:
-#s
-  #Configuracion de JPA/Hibernate
+    password: ""
+
+  # Configuración de JPA/Hibernate
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
@@ -21,6 +21,6 @@ spring:
     init:
       mode: never
 
-#Configurar el servidor embebido (Tomcat)
+# Configurar el servidor embebido (Tomcat)
 server:
   port: 8080
