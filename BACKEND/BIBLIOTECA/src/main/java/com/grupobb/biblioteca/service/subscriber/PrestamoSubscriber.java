@@ -23,7 +23,12 @@ public class PrestamoSubscriber implements Subscriber<Loan> {
     @Override
     public void onSubscribe(Subscription subscription) {
         this.subscription = subscription;
+
+        System.out.println("");
+        System.out.println("==========================================================");
         System.out.println("[Reactive] onSubscribe: Suscripción a préstamos iniciada");
+        System.out.println("==========================================================");
+        System.out.println("");
         System.out.println("[Reactive] Solicitando análisis de " + batchSize + " préstamos");
         subscription.request(batchSize);
     }
@@ -31,15 +36,18 @@ public class PrestamoSubscriber implements Subscriber<Loan> {
     @Override
     public void onNext(Loan prestamo) {
         // Lógica de procesamiento de cada elemento
+        System.out.println("");
+        System.out.println("//////////////////////////////////////////////////////////////");
         System.out.println("[Reactive] onNext: Procesando préstamo ID: " + prestamo.getId()
                 + " - Libro: " + prestamo.getLibro().getTitulo());
-
+        System.out.println("//////////////////////////////////////////////////////////////");
         if (processed.incrementAndGet() >= batchSize) {
             processed.set(0);
             System.out.println("[Reactive] Lote de préstamos procesado");
             System.out.println("[Reactive] Solicitando siguiente lote de " + batchSize);
             subscription.request(batchSize);
         }
+
     }
 
     @Override
@@ -50,7 +58,11 @@ public class PrestamoSubscriber implements Subscriber<Loan> {
 
     @Override
     public void onComplete() {
+        System.out.println("");
+        System.out.println("######################################################################");
         System.out.println("[Reactive] onComplete: Todos los préstamos han sido analizados.");
+        System.out.println("######################################################################");
+        System.out.println("");
         done.countDown();
     }
 }
