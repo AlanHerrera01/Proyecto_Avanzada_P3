@@ -57,12 +57,31 @@ export class WebSocketService {
 
         this.ws.onmessage = (event) => {
           try {
-            const message: WebSocketMessage = JSON.parse(event.data);
+            const data = event.data;
+
+            // Si no es JSON, tratarlo como mensaje del sistema
+            if (typeof data === 'string' && !data.trim().startsWith('{')) {
+              this.messages$.next({
+                type: 'SYSTEM_MESSAGE',
+                payload: {
+                  message: data,
+                  level: 'info',
+                  data: null
+                },
+                timestamp: Date.now(),
+                id: 'plain-text'
+              });
+              return;
+            }
+
+            const message: WebSocketMessage = JSON.parse(data);
             this.messages$.next(message);
+
           } catch (error) {
             console.error('[WebSocket] Error parsing message:', error);
           }
         };
+
 
         this.ws.onclose = (event) => {
           console.log('[WebSocket] Conexión cerrada:', event.code, event.reason);
