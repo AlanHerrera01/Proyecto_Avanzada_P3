@@ -29,45 +29,47 @@ export class ReactiveApiService {
   // Convertir llamada API a Observable reactivo
   private createObservable<T>(promise: Promise<T>, operation: string): Observable<T> {
     return from(promise).pipe(
-      delay(this.config.delayMs), // Simular procesamiento asíncrono
-      timeout(this.config.timeoutMs),
-      retry(this.config.maxRetries),
-      map(response => {
-        if (this.config.enableMetrics) {
+        delay(this.config.delayMs),
+        timeout(this.config.timeoutMs),
+        retry(this.config.maxRetries),
+        map(response => {
+          if (this.config.enableMetrics) {
+            eventBus.publishSystemEvent(
+                `Operación ${operation} completada`,
+                'info',
+                { operation, timestamp: Date.now() }
+            );
+          }
+          return response;
+        }),
+        catchError(error => {
           eventBus.publishSystemEvent(
-            `Operación ${operation} completada`,
-            'info',
-            { operation, timestamp: Date.now() }
+              `Error en operación ${operation}`,
+              'error',
+              { operation, error: error.message, timestamp: Date.now() }
           );
-        }
-        return response;
-      }),
-      catchError(error => {
-        eventBus.publishSystemEvent(
-          `Error en operación ${operation}`,
-          'error',
-          { operation, error: error.message, timestamp: Date.now() }
-        );
-        return throwError(() => error);
-      })
+          return throwError(() => error);
+        })
     );
   }
 
-  // Métodos reactivos para préstamos
+  // =========================
+  // === PRÉSTAMOS (LOANS) ===
+  // =========================
+
   getLoansReactive(): Observable<unknown[]> {
     return this.createObservable(
-      api.get('/loans').then(response => response.data),
-      'GET_LOANS'
+        api.get('/loans').then(response => response.data),
+        'GET_LOANS'
     );
   }
 
   createLoanReactive(data: unknown): Observable<unknown> {
     const observable = this.createObservable(
-      api.post('/loans', data).then(response => response.data),
-      'CREATE_LOAN'
+        api.post('/loans', data).then(response => response.data),
+        'CREATE_LOAN'
     );
 
-    // Publicar evento de préstamo creado
     observable.subscribe({
       next: (loan) => {
         const loanData = loan as { id: number; usuarioId: number; libroId: number };
@@ -84,11 +86,10 @@ export class ReactiveApiService {
 
   returnLoanReactive(id: number): Observable<unknown> {
     const observable = this.createObservable(
-      api.post(`/loans/${id}/return`).then(response => response.data),
-      'RETURN_LOAN'
+        api.post(`/loans/${id}/return`).then(response => response.data),
+        'RETURN_LOAN'
     );
 
-    // Publicar evento de préstamo devuelto
     observable.subscribe({
       next: (loan) => {
         const loanData = loan as { id: number; usuarioId: number; libroId: number };
@@ -103,76 +104,182 @@ export class ReactiveApiService {
     return observable;
   }
 
-  // === LIBROS ===
+  // ==================
+  // === AUTORES ======
+  // ==================
 
-createBookReactive(data: unknown): Observable<unknown> {
-  const observable = this.createObservable(
-    api.post('/books', data).then(r => r.data),
-    'CREATE_BOOK'
-  );
-
-  observable.subscribe({
-    next: (book) => {
-      eventBus.publish({
-        type: 'BOOK_CREATED',
-        payload: { bookId: (book as any).id }
-      });
-    }
-  });
-
-  return observable;
-}
-
-updateBookReactive(id: number, data: unknown): Observable<unknown> {
-  const observable = this.createObservable(
-    api.put(`/books/${id}`, data).then(r => r.data),
-    'UPDATE_BOOK'
-  );
-
-  observable.subscribe({
-    next: () => {
-      eventBus.publish({
-        type: 'BOOK_UPDATED',
-        payload: { bookId: id }
-      });
-    }
-  });
-
-  return observable;
-}
-
-deleteBookReactive(id: number): Observable<void> {
-  const observable = this.createObservable(
-    api.delete(`/books/${id}`).then(() => undefined),
-    'DELETE_BOOK'
-  );
-
-  observable.subscribe({
-    next: () => {
-      eventBus.publish({
-        type: 'BOOK_DELETED',
-        payload: { bookId: id }
-      });
-    }
-  });
-
-  return observable;
-}
-
-
-  // Métodos reactivos para usuarios
-  getUsersReactive(): Observable<unknown[]> {
+  getAuthorsReactive(): Observable<unknown[]> {
     return this.createObservable(
-      api.get('/users').then(response => response.data),
-      'GET_USERS'
+        api.get('/authors').then(r => r.data),
+        'GET_AUTHORS'
     );
   }
 
-  // Métodos reactivos para libros
+  createAuthorReactive(data: unknown): Observable<unknown> {
+    const observable = this.createObservable(
+        api.post('/authors', data).then(r => r.data),
+        'CREATE_AUTHOR'
+    );
+
+    // Igual al loan: subscribe interno + publicar evento
+    observable.subscribe({
+      next: (author) => {
+        const authorData = author as { id: number; nombre?: string; nacionalidad?: string };
+        // Si tu eventBus tiene publishAuthorEvent úsalo, si no, uso publish genérico:
+        if ((eventBus as any).publishAuthorEvent) {
+          (eventBus as any).publishAuthorEvent('AUTHOR_CREATED', {
+            authorId: authorData.id,
+            nombre: authorData.nombre,
+            nacionalidad: authorData.nacionalidad
+          });
+        } else {
+          eventBus.publish({
+            type: 'AUTHOR_CREATED',
+            payload: {
+              authorId: authorData.id,
+              nombre: authorData.nombre,
+              nacionalidad: authorData.nacionalidad
+            }
+          });
+        }
+      }
+    });
+
+    return observable;
+  }
+
+  updateAuthorReactive(id: number, data: unknown): Observable<unknown> {
+    const observable = this.createObservable(
+        api.put(`/authors/${id}`, data).then(r => r.data),
+        'UPDATE_AUTHOR'
+    );
+
+    observable.subscribe({
+      next: (author) => {
+        const authorData = author as { id?: number; nombre?: string; nacionalidad?: string };
+        const authorId = authorData.id ?? id;
+
+        if ((eventBus as any).publishAuthorEvent) {
+          (eventBus as any).publishAuthorEvent('AUTHOR_UPDATED', {
+            authorId,
+            nombre: authorData.nombre,
+            nacionalidad: authorData.nacionalidad
+          });
+        } else {
+          eventBus.publish({
+            type: 'AUTHOR_UPDATED',
+            payload: {
+              authorId,
+              nombre: authorData.nombre,
+              nacionalidad: authorData.nacionalidad
+            }
+          });
+        }
+      }
+    });
+
+    return observable;
+  }
+
+  deleteAuthorReactive(id: number): Observable<void> {
+    const observable = this.createObservable(
+        api.delete(`/authors/${id}`).then(() => undefined),
+        'DELETE_AUTHOR'
+    );
+
+    observable.subscribe({
+      next: () => {
+        if ((eventBus as any).publishAuthorEvent) {
+          (eventBus as any).publishAuthorEvent('AUTHOR_DELETED', { authorId: id });
+        } else {
+          eventBus.publish({
+            type: 'AUTHOR_DELETED',
+            payload: { authorId: id }
+          });
+        }
+      }
+    });
+
+    return observable;
+  }
+
+  // ============
+  // === LIBROS ==
+  // ============
+
+  createBookReactive(data: unknown): Observable<unknown> {
+    const observable = this.createObservable(
+        api.post('/books', data).then(r => r.data),
+        'CREATE_BOOK'
+    );
+
+    observable.subscribe({
+      next: (book) => {
+        eventBus.publish({
+          type: 'BOOK_CREATED',
+          payload: { bookId: (book as any).id }
+        });
+      }
+    });
+
+    return observable;
+  }
+
+  updateBookReactive(id: number, data: unknown): Observable<unknown> {
+    const observable = this.createObservable(
+        api.put(`/books/${id}`, data).then(r => r.data),
+        'UPDATE_BOOK'
+    );
+
+    observable.subscribe({
+      next: () => {
+        eventBus.publish({
+          type: 'BOOK_UPDATED',
+          payload: { bookId: id }
+        });
+      }
+    });
+
+    return observable;
+  }
+
+  deleteBookReactive(id: number): Observable<void> {
+    const observable = this.createObservable(
+        api.delete(`/books/${id}`).then(() => undefined),
+        'DELETE_BOOK'
+    );
+
+    observable.subscribe({
+      next: () => {
+        eventBus.publish({
+          type: 'BOOK_DELETED',
+          payload: { bookId: id }
+        });
+      }
+    });
+
+    return observable;
+  }
+
+  // =================
+  // === USUARIOS =====
+  // =================
+
+  getUsersReactive(): Observable<unknown[]> {
+    return this.createObservable(
+        api.get('/users').then(response => response.data),
+        'GET_USERS'
+    );
+  }
+
+  // =================
+  // === LIBROS GET ===
+  // =================
+
   getBooksReactive(): Observable<unknown[]> {
     return this.createObservable(
-      api.get('/books').then(response => response.data),
-      'GET_BOOKS'
+        api.get('/books').then(response => response.data),
+        'GET_BOOKS'
     );
   }
 
@@ -190,10 +297,8 @@ deleteBookReactive(id: number): Observable<void> {
 export const reactiveApi = new ReactiveApiService();
 
 // Hook para usar la API reactiva con procesamiento en lotes
-export function useBatchedApi<T>(
-  apiCall: () => Observable<T[]>
-) {
-  return (new Observable<T[]>(subscriber => {
+export function useBatchedApi<T>(apiCall: () => Observable<T[]>) {
+  return new Observable<T[]>(subscriber => {
     let processed = 0;
     let allData: T[] = [];
 
@@ -202,40 +307,38 @@ export function useBatchedApi<T>(
         allData = [...allData, ...batch];
         processed += batch.length;
 
-        // Publicar métricas de procesamiento
         eventBus.publishSystemEvent(
-          `Procesando lote de ${batch.length} elementos`,
-          'info',
-          { 
-            batchSize: batch.length,
-            totalProcessed: processed,
-            timestamp: Date.now()
-          }
+            `Procesando lote de ${batch.length} elementos`,
+            'info',
+            {
+              batchSize: batch.length,
+              totalProcessed: processed,
+              timestamp: Date.now()
+            }
         );
 
-        // Simular procesamiento por lotes como en el backend
         setTimeout(() => {
           subscriber.next(allData);
         }, 1000);
       },
       error: (error) => {
         eventBus.publishSystemEvent(
-          'Error en procesamiento por lotes',
-          'error',
-          { error: error.message, processed }
+            'Error en procesamiento por lotes',
+            'error',
+            { error: error.message, processed }
         );
         subscriber.error(error);
       },
       complete: () => {
         eventBus.publishSystemEvent(
-          'Procesamiento por lotes completado',
-          'info',
-          { totalItems: allData.length, processed }
+            'Procesamiento por lotes completado',
+            'info',
+            { totalItems: allData.length, processed }
         );
         subscriber.complete();
       }
     });
 
     return () => subscription.unsubscribe();
-  }));
+  });
 }
