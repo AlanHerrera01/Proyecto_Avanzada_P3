@@ -9,7 +9,7 @@ import com.grupobb.biblioteca.repository.BookRepository;
 import com.grupobb.biblioteca.repository.LoanRepository;
 import com.grupobb.biblioteca.repository.UserRepository;
 import com.grupobb.biblioteca.service.LoanService;
-import com.grupobb.biblioteca.service.subscriber.PrestamoSubscriber;
+import com.grupobb.biblioteca.service.subscriber.LoanSubscriber;
 import com.grupobb.biblioteca.web.advice.AlreadyReturnedException;
 import com.grupobb.biblioteca.web.advice.BookNotAvailableException;
 import com.grupobb.biblioteca.web.advice.NotFoundException;
@@ -116,7 +116,7 @@ public class LoanServiceImpl implements LoanService {
                 })
 
                 // Suscripción usando tu clase personalizada
-                .subscribe(new PrestamoSubscriber(loanBatchSize));
+                .subscribe(new LoanSubscriber(loanBatchSize));
     }
 
     // ... (Mantén getById y toResponse igual que antes) ...
