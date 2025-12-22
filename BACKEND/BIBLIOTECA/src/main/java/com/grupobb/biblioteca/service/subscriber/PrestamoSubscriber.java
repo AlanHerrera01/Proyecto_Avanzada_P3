@@ -41,13 +41,14 @@ public class PrestamoSubscriber implements Subscriber<Loan> {
         System.out.println("[Reactive] onNext: Procesando préstamo ID: " + prestamo.getId()
                 + " - Libro: " + prestamo.getLibro().getTitulo());
         System.out.println("//////////////////////////////////////////////////////////////");
-        if (processed.incrementAndGet() >= batchSize) {
-            processed.set(0);
+
+        // Backpressure: solo pedir más cuando el lote anterior fue procesado
+        int current = processed.incrementAndGet();
+        if (current % batchSize == 0) {
             System.out.println("[Reactive] Lote de préstamos procesado");
             System.out.println("[Reactive] Solicitando siguiente lote de " + batchSize);
             subscription.request(batchSize);
         }
-
     }
 
     @Override

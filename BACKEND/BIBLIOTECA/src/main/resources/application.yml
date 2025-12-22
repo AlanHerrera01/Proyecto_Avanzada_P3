@@ -11,7 +11,7 @@ spring:
     # en entornos locales y con versiones recientes del driver.
     url: jdbc:mysql://localhost:3306/biblioteca_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
-    password: '1234' # XAMPP default often has empty password for root; change for your setup
+    password: '' # XAMPP default often has empty password for root; change for your setup
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 10
@@ -61,3 +61,6 @@ application:
 
 app:
   version: @project.version@
+
+loan:
+  batch-size: 2 # Valor por defecto, puede ser cambiado

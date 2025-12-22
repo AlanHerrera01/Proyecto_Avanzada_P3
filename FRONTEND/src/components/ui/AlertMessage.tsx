@@ -12,7 +12,7 @@ export const AlertMessage: React.FC<Props> = ({ message, type, onClose }) => {
       const timer = setTimeout(onClose, 3500);
       return () => clearTimeout(timer);
     }
-  }, [message]);
+  }, [message, onClose]);
 
   if (!message) return null;
 

@@ -1,5 +1,4 @@
 import React from 'react';
-import { X } from 'lucide-react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -12,15 +11,22 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
   if (!isOpen) return null;
 
   return (
-    <div className="modal fade show d-block" tabIndex={-1} style={{ background: 'rgba(21, 101, 192, 0.15)', backdropFilter: 'blur(2px)' }}>
-      <div className="modal-dialog modal-dialog-centered animate__animated animate__fadeInDown" style={{ maxWidth: 500 }}>
-        <div className="modal-content shadow-lg border-0 rounded-4" style={{ animation: 'modalPop .4s cubic-bezier(.4,2,.6,1)', background: 'linear-gradient(120deg, #f5faff 70%, #ede7f6 100%)' }}>
-          <div className="modal-header bg-primary bg-gradient text-white rounded-top-4 d-flex align-items-center justify-content-between px-4 py-3" style={{ background: 'linear-gradient(90deg, #1565c0 60%, #512da8 100%)', boxShadow: '0 2px 12px 0 #1565c033' }}>
-            <h2 className="modal-title fs-4 fw-bold mb-0" style={{ letterSpacing: '-1px' }}>{title}</h2>
+    <div className="modal fade show d-block" tabIndex={-1} style={{ background: 'rgba(139, 115, 85, 0.25)', backdropFilter: 'blur(4px)' }}>
+      <div className="modal-dialog modal-dialog-centered animate__animated animate__fadeInDown" style={{ maxWidth: 550 }}>
+        <div className="modal-content shadow-2xl border-0 rounded-4" style={{ 
+          animation: 'modalPop .4s cubic-bezier(.4,2,.6,1)', 
+          background: 'linear-gradient(135deg, #fefefe 0%, #f8f5f0 50%, #f5f0e6 100%)',
+          border: '2px solid rgba(139, 115, 85, 0.2)'
+        }}>
+          <div className="modal-header bg-gradient text-white rounded-top-4 d-flex align-items-center justify-content-between px-4 py-3" style={{ 
+            background: 'linear-gradient(135deg, #8b7355 0%, #a0826d 50%, #b8956a 100%)', 
+            boxShadow: '0 4px 20px 0 rgba(139, 115, 85, 0.3)' 
+          }}>
+            <h2 className="modal-title fs-4 fw-bold mb-0" style={{ letterSpacing: '-0.5px' }}>{title}</h2>
             <button type="button" className="btn-close btn-close-white ms-2" aria-label="Cerrar" onClick={onClose}></button>
           </div>
-          <div className="modal-body px-5 py-4" style={{ minHeight: 180 }}>
-            <div style={{ maxWidth: 400, margin: '0 auto' }}>
+          <div className="modal-body px-5 py-4" style={{ minHeight: 200, background: 'rgba(255, 255, 255, 0.9)' }}>
+            <div style={{ maxWidth: 450, margin: '0 auto' }}>
               {children}
             </div>
           </div>
@@ -32,15 +38,23 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
           100% { transform: scale(1) translateY(0); opacity: 1; }
         }
         .modal-content input, .modal-content select {
-          border-radius: 0.7rem !important;
-          box-shadow: 0 1px 8px 0 #1565c01a;
-          border: 1.5px solid #d1e3fa;
-          margin-bottom: 0.5rem;
+          border-radius: 0.8rem !important;
+          box-shadow: 0 2px 12px 0 rgba(139, 115, 85, 0.15);
+          border: 2px solid rgba(139, 115, 85, 0.3);
+          margin-bottom: 0.8rem;
+          background: rgba(255, 255, 255, 0.95);
+          transition: all 0.3s ease;
+        }
+        .modal-content input:focus, .modal-content select:focus {
+          border-color: #8b7355;
+          box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.2);
+          background: white;
         }
         .modal-content label {
-          font-weight: 500;
-          color: #1565c0;
-          margin-bottom: 0.2rem;
+          font-weight: 600;
+          color: #5d4e37;
+          margin-bottom: 0.4rem;
+          font-size: 0.95rem;
         }
         .modal-content .invalid-feedback {
           color: #d32f2f;
@@ -59,10 +73,24 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
           color: #d32f2f;
         }
         .modal-content .btn {
-          min-width: 110px;
-          font-weight: 500;
-          border-radius: 0.7rem;
-          box-shadow: 0 2px 8px 0 #1565c022;
+          min-width: 120px;
+          font-weight: 600;
+          border-radius: 0.8rem;
+          box-shadow: 0 3px 12px 0 rgba(139, 115, 85, 0.25);
+          transition: all 0.3s ease;
+          border: 2px solid transparent;
+        }
+        .modal-content .btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px 0 rgba(139, 115, 85, 0.35);
+        }
+        .modal-content .btn-primary {
+          background: linear-gradient(135deg, #8b7355 0%, #a0826d 100%);
+          border-color: #8b7355;
+        }
+        .modal-content .btn-secondary {
+          background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+          border-color: #6c757d;
         }
         .modal-content .btn + .btn {
           margin-left: 0.5rem;
