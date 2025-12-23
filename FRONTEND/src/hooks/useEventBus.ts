@@ -13,13 +13,27 @@ type BookEventPayload = {
   bookId: number;
 };
 
-// ✅ Eventos de autores (igual a Loan/Book)
+// ✅ Eventos de autores
 type AuthorEventType = 'AUTHOR_CREATED' | 'AUTHOR_UPDATED' | 'AUTHOR_DELETED';
+
 
 type AuthorEventPayload = {
   authorId: number;
   nombre?: string;
   nacionalidad?: string;
+};
+
+type LoanEventType = 'LOAN_CREATED' | 'LOAN_RETURNED' | 'LOAN_ANALYSIS_STARTED' | 'LOAN_ANALYSIS_COMPLETED';
+
+type LoanEventPayload = {
+  loanId?: number;
+  userId?: number;
+  bookId?: number;
+  metrics?: {
+    processed: number;
+    errors: number;
+    batch: number;
+  };
 };
 
 // =======================
@@ -89,17 +103,8 @@ export function useEventPublisher() {
 
   // Publicar eventos de préstamos
   const publishLoanEvent = useCallback((
-      type: 'LOAN_CREATED' | 'LOAN_RETURNED' | 'LOAN_ANALYSIS_STARTED' | 'LOAN_ANALYSIS_COMPLETED',
-      payload: {
-        loanId?: number;
-        userId?: number;
-        bookId?: number;
-        metrics?: {
-          processed: number;
-          errors: number;
-          batch: number;
-        };
-      }
+      type: LoanEventType,
+      payload: LoanEventPayload
   ) => {
     eventBus.publishLoanEvent(type, payload);
   }, []);
@@ -115,7 +120,7 @@ export function useEventPublisher() {
     });
   }, []);
 
-  // ✅ Publicar eventos de autores (IGUAL al patrón de Loan)
+  // Publicar eventos de autores
   const publishAuthorEvent = useCallback((
       type: AuthorEventType,
       payload: AuthorEventPayload
