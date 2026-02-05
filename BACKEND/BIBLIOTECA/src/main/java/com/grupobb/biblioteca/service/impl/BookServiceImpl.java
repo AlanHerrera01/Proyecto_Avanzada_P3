@@ -95,11 +95,11 @@ public class BookServiceImpl implements BookService {
 
                 .retry(3)
 
+
                 .onErrorResume(err -> {
                     System.out.println("[Reactive] Error en análisis de libros: " + err.getMessage());
                     return Flux.empty();
                 })
-
                 .subscribe(new BookSubscriber(bookBatchSize));
     }
 

@@ -34,7 +34,7 @@ public class BookSubscriber implements Subscriber<Book> {
     public void onNext(Book book) {
         System.out.println("");
         System.out.println("//////////////////////////////////////////////////////////////");
-        System.out.println("[Reactive] Procesando libro ID: " + book.getId()
+        System.out.println("[Reactive] onNext: Procesando libro ID: " + book.getId()
                 + " - Título: " + book.getTitulo());
         System.out.println("//////////////////////////////////////////////////////////////");
 
@@ -48,14 +48,14 @@ public class BookSubscriber implements Subscriber<Book> {
 
     @Override
     public void onError(Throwable t) {
-        System.out.println("[Reactive] Error en flujo de libros: " + t.getMessage());
+        System.out.println("[Reactive] onError: " + t.getMessage());
     }
 
     @Override
     public void onComplete() {
         System.out.println("");
         System.out.println("######################################################################");
-        System.out.println("[Reactive] Análisis de libros completado");
+        System.out.println("[Reactive] onComplete: Análisis de libros completado");
         System.out.println("######################################################################");
         System.out.println("");
     }
