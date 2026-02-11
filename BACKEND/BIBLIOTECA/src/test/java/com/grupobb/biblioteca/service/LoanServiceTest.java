@@ -1,5 +1,20 @@
 package com.grupobb.biblioteca.service;
 
+import java.time.LocalDate;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.grupobb.biblioteca.domain.Author;
 import com.grupobb.biblioteca.domain.Book;
 import com.grupobb.biblioteca.domain.Loan;
@@ -13,14 +28,6 @@ import com.grupobb.biblioteca.service.impl.LoanServiceImpl;
 import com.grupobb.biblioteca.web.advice.AlreadyReturnedException;
 import com.grupobb.biblioteca.web.advice.BookNotAvailableException;
 import com.grupobb.biblioteca.web.advice.NotFoundException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.time.LocalDate;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Pruebas unitarias para LoanService usando Mockito
@@ -82,8 +89,8 @@ public class LoanServiceTest {
         // Creamos un usuario válido
         User user = new User();
         user.setId(usuarioId);
-        user.setNombre("Carlos Mendoza");
-        user.setEmail("carlos.mendoza@test.com");
+        user.setNombre("Alan Herrera");
+        user.setEmail("alan.herrera@gmail.com");
 
         // Creamos un autor para el libro
         Author author = new Author();
@@ -206,8 +213,8 @@ public class LoanServiceTest {
         // Creamos un usuario válido
         User user = new User();
         user.setId(usuarioId);
-        user.setNombre("Ana Torres");
-        user.setEmail("ana.torres@test.com");
+        user.setNombre("Alan Herrera");
+        user.setEmail("alan.herrera@gmail.com");
 
         // Creamos el request con ID de libro inexistente
         LoanRequestData request = new LoanRequestData();
@@ -253,8 +260,8 @@ public class LoanServiceTest {
         // Creamos un usuario válido
         User user = new User();
         user.setId(usuarioId);
-        user.setNombre("Pedro Ramírez");
-        user.setEmail("pedro.ramirez@test.com");
+        user.setNombre("Alan Herrera");
+        user.setEmail("alan.herrera@gmail.com");
 
         // Creamos un autor válido
         Author author = new Author();
@@ -313,8 +320,8 @@ public class LoanServiceTest {
         // Creamos un usuario que tiene el préstamo
         User user = new User();
         user.setId(usuarioId);
-        user.setNombre("Laura Gómez");
-        user.setEmail("laura.gomez@test.com");
+        user.setNombre("Alan Herrera");
+        user.setEmail("alan.herrera@gmail.com");
 
         // Creamos un autor
         Author author = new Author();
@@ -385,8 +392,8 @@ public class LoanServiceTest {
         // Creamos un usuario
         User user = new User();
         user.setId(usuarioId);
-        user.setNombre("Miguel Sánchez");
-        user.setEmail("miguel.sanchez@test.com");
+        user.setNombre("Alan Herrera");
+        user.setEmail("alan.herrera@gmail.com");
 
         // Creamos un autor
         Author author = new Author();
