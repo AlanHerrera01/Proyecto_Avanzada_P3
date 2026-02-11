@@ -129,7 +129,7 @@ public class LoanServiceTest {
         assertNotNull(response.getId(), "El ID del préstamo debe estar asignado");
         
         // Verificamos que los datos del préstamo sean correctos
-        assertEquals("Carlos Mendoza", response.getUsuarioNombre(), "El nombre del usuario debe coincidir");
+        assertEquals("Alan Herrera", response.getUsuarioNombre(), "El nombre del usuario debe coincidir");
         assertEquals("Refactoring", response.getLibroTitulo(), "El título del libro debe coincidir");
         assertEquals(LocalDate.now(), response.getFechaPrestamo(), "La fecha de préstamo debe ser hoy");
         assertNull(response.getFechaDevolucion(), "La fecha de devolución debe ser nula (préstamo activo)");
