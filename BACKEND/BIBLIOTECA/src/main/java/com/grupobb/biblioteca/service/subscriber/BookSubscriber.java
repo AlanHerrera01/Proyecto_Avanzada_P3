@@ -15,7 +15,7 @@ public class BookSubscriber implements Subscriber<Book> {
     private Subscription subscription; // Objeto que nos permite pedir mas datos y cancelar la suscripción
     private final AtomicInteger processed = new AtomicInteger(0); // Contador de libros procesados (hilo-seguro)
 
-    public BookSubscriber(int batchSize) {
+    public BookSubscriber(int batchSize) {// Constructor que recibe el tamaño del lote
         this.batchSize = batchSize;
     }
 
