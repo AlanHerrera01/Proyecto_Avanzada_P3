@@ -146,8 +146,8 @@ public class UserServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // ACT & ASSERT
-        assertThrows(NotFoundException.class, () -> {
-            userService.getById(userId);
+        assertThrows(NotFoundException.class, () -> {// Esperamos que al ejecutar este método se lance una NotFoundException
+            userService.getById(userId);// Esperamos que lance una NotFoundException
         });
     }
 
@@ -167,6 +167,7 @@ public class UserServiceTest {
         userExistente.setId(userId);
         userExistente.setEmail("viejo.email@example.com");
 
+        // Simulamos que el usuario existe en la BD
         when(userRepository.findById(userId)).thenReturn(Optional.of(userExistente));
 
         // IMPORTANTE: Decimos que el NUEVO email no existe en la BD
@@ -181,7 +182,7 @@ public class UserServiceTest {
         // Assert
         assertEquals("Nombre Actualizado", response.getNombre());
         assertEquals("nuevo.email@example.com", response.getEmail());
-        verify(userRepository).save(any(User.class));
+        verify(userRepository).save(any(User.class));// Verificamos que se llamó al método save para guardar los cambios
     }
 
     /**
@@ -195,17 +196,19 @@ public class UserServiceTest {
         UserRequestData request = new UserRequestData();
         request.setEmail("email.de.otro@example.com"); // Este email ya existe
 
+        // Usuario existente en la BD
         User userExistente = new User();
         userExistente.setId(userId);
         userExistente.setEmail("mi.email.actual@example.com");
 
+        // Simulamos que el usuario existe en la BD
         when(userRepository.findById(userId)).thenReturn(Optional.of(userExistente));
 
         // SIMULAMOS EL CONFLICTO: existsByEmail devuelve TRUE
         when(userRepository.existsByEmail(request.getEmail())).thenReturn(true);
 
         // Act & Assert
-        assertThrows(ConflictException.class, () -> {
+        assertThrows(ConflictException.class, () -> {// Esperamos que al ejecutar este método se lance una ConflictException
             userService.update(userId, request);
         });
 
@@ -224,12 +227,13 @@ public class UserServiceTest {
         User user = new User();
         user.setId(userId);
 
+        // Simulamos que el usuario existe
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         // Simulamos: "El usuario NO tiene libros pendientes (false)"
         when(loanRepository.existsByUsuarioAndFechaDevolucionIsNull(user)).thenReturn(false);
 
         // ACT
-        assertDoesNotThrow(() -> userService.delete(userId));
+        assertDoesNotThrow(() -> userService.delete(userId));// No debería lanzar ninguna excepción
 
         // ASSERT: Verificamos que el repositorio efectivamente ejecutó el borrado
         verify(userRepository).delete(user);
@@ -246,12 +250,13 @@ public class UserServiceTest {
         User user = new User();
         user.setId(userId);
 
+        // Simulamos que el usuario existe
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         // Simulamos: "El usuario SI tiene libros pendientes (true)"
         when(loanRepository.existsByUsuarioAndFechaDevolucionIsNull(user)).thenReturn(true);
 
         // ACT & ASSERT: Debería fallar porque no se puede borrar a alguien con deudas
-        BadRequestException ex = assertThrows(BadRequestException.class, () -> {
+        BadRequestException ex = assertThrows(BadRequestException.class, () -> {// Esperamos que al ejecutar este método se lance una BadRequestException
             userService.delete(userId);
         });
 
