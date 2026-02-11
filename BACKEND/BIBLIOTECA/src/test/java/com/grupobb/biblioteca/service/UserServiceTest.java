@@ -151,5 +151,112 @@ public class UserServiceTest {
         });
     }
 
+    /**
+     * PRUEBA 5: Actualizar un usuario.
+     * El mock de existsByEmail debe ser false para que permita el cambio.
+     */
+    @Test
+    void update_datosValidos_retornaUsuarioActualizado() {
+        // Arrange
+        Long userId = 1L;
+        UserRequestData request = new UserRequestData();
+        request.setNombre("Nombre Actualizado");
+        request.setEmail("nuevo.email@example.com"); // Email nuevo
 
+        User userExistente = new User();
+        userExistente.setId(userId);
+        userExistente.setEmail("viejo.email@example.com");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userExistente));
+
+        // IMPORTANTE: Decimos que el NUEVO email no existe en la BD
+        when(userRepository.existsByEmail(request.getEmail())).thenReturn(false);
+
+        // Simulamos que el save devuelve el objeto con los cambios aplicados
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Act
+        UserResponseData response = userService.update(userId, request);
+
+        // Assert
+        assertEquals("Nombre Actualizado", response.getNombre());
+        assertEquals("nuevo.email@example.com", response.getEmail());
+        verify(userRepository).save(any(User.class));
+    }
+
+    /**
+     * PRUEBA 6: Error por email duplicado.
+     * Aquí simulamos que el email que intentamos poner ya lo tiene OTRA persona.
+     */
+    @Test
+    void update_emailEnUso_lanzaConflictException() {
+        // Arrange
+        Long userId = 1L;
+        UserRequestData request = new UserRequestData();
+        request.setEmail("email.de.otro@example.com"); // Este email ya existe
+
+        User userExistente = new User();
+        userExistente.setId(userId);
+        userExistente.setEmail("mi.email.actual@example.com");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userExistente));
+
+        // SIMULAMOS EL CONFLICTO: existsByEmail devuelve TRUE
+        when(userRepository.existsByEmail(request.getEmail())).thenReturn(true);
+
+        // Act & Assert
+        assertThrows(ConflictException.class, () -> {
+            userService.update(userId, request);
+        });
+
+        // Verificamos que no se guardó nada por el error de duplicado
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    /**
+     * PRUEBA 7: Eliminar un usuario sin préstamos activos.
+     * Aquí simulamos que el usuario existe y que no tiene préstamos activos, por lo que el servicio debería permitir eliminarlo sin lanzar excepciones, y el repositorio debería ejecutar el método delete
+     */
+    @Test
+    void delete_usuarioSinPrestamosActivos_eliminaCorrectamente() {
+        // ARRANGE
+        Long userId = 1L;
+        User user = new User();
+        user.setId(userId);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        // Simulamos: "El usuario NO tiene libros pendientes (false)"
+        when(loanRepository.existsByUsuarioAndFechaDevolucionIsNull(user)).thenReturn(false);
+
+        // ACT
+        assertDoesNotThrow(() -> userService.delete(userId));
+
+        // ASSERT: Verificamos que el repositorio efectivamente ejecutó el borrado
+        verify(userRepository).delete(user);
+    }
+
+    /**
+     * PRUEBA 8: Eliminar un usuario con préstamos activos.
+     * Aquí simulamos que el usuario existe pero tiene préstamos activos, por lo que el servicio
+     */
+    @Test
+    void delete_usuarioConPrestamosActivos_lanzaBadRequestException() {
+        // ARRANGE
+        Long userId = 1L;
+        User user = new User();
+        user.setId(userId);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        // Simulamos: "El usuario SI tiene libros pendientes (true)"
+        when(loanRepository.existsByUsuarioAndFechaDevolucionIsNull(user)).thenReturn(true);
+
+        // ACT & ASSERT: Debería fallar porque no se puede borrar a alguien con deudas
+        BadRequestException ex = assertThrows(BadRequestException.class, () -> {
+            userService.delete(userId);
+        });
+
+        assertEquals("No se puede eliminar el usuario porque tiene préstamos activos", ex.getMessage());
+        // Verificamos que NUNCA se llamó al borrado
+        verify(userRepository, never()).delete(any(User.class));
+    }
 }
