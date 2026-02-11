@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BookSubscriber implements Subscriber<Book> {
 
     private final int batchSize; // Tamaño del lote de elementos a solicitar
-    private Subscription subscription; // Objeto que gestiona el flujo de datos
+    private Subscription subscription; // Objeto que nos permite pedir mas datos y cancelar la suscripción
     private final AtomicInteger processed = new AtomicInteger(0); // Contador de libros procesados (hilo-seguro)
 
     public BookSubscriber(int batchSize) {
